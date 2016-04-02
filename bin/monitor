@@ -23,7 +23,7 @@ function start(options) {
       monitor = new forever.Monitor(script, options);
 
   forever.logEvents(monitor);
-  monitor.start();
+  monitor.start(false);
 
   monitor.on('start', function () {
     //
@@ -43,14 +43,23 @@ function start(options) {
     //
     // Write the pidFile to disk
     //
-    writePid(options.pidFile, monitor.child.pid);
+    for (var i = 0; i < monitor.children.length; i++) {
+      writePid(options.pidFile +'-'+ i, monitor.children[i].pid);
+    }
+  });
+
+  monitor.on('worker:start', function (pid, index) {
+    //
+    // Write the pidFile to disk
+    //
+    writePid(options.pidFile +'-'+ index, pid);
   });
 
   //
   // When the monitor restarts update the pid in the pidFile
   //
-  monitor.on('restart', function () {
-    writePid(options.pidFile, monitor.child.pid);
+  monitor.on('worker:restart', function (pid, index) {
+    writePid(options.pidFile +'-'+ index, pid);
   });
 
 
